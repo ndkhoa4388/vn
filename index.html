@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Chatbot</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+        #chatbox { border: 1px solid #ccc; height: 400px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+        .user-message { text-align: right; color: blue; }
+        .bot-message { text-align: left; color: green; white-space: pre-wrap; } /* Giữ định dạng của bot */
+        #userInput { width: 80%; padding: 8px; }
+        button { padding: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Chatbot Warehouse Hunex</h1>
+    <div id="chatbox"></div>
+    <input type="text" id="userInput" placeholder="Hỏi gì đó...">
+    <button onclick="sendMessage()">Gửi</button>
+
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const userInput = document.getElementById('userInput');
+
+        async function sendMessage() {
+            const userPrompt = userInput.value;
+            if (!userPrompt) return;
+
+            // Hiển thị tin nhắn người dùng
+            appendMessage('user-message', `Bạn: ${userPrompt}`);
+            userInput.value = '';
+
+            try {
+                // Gửi yêu cầu đến backend
+                const response = await fetch('http://127.0.0.1:5000/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: userPrompt }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+
+                const data = await response.json();
+                
+                // Hiển thị tin nhắn của bot
+                appendMessage('bot-message', `Bot: ${data.response}`);
+
+            } catch (error) {
+                appendMessage('bot-message', `Bot: Lỗi rồi! ${error}`);
+            }
+        }
+        
+        function appendMessage(className, text) {
+             const messageElement = document.createElement('p');
+             messageElement.className = className;
+             messageElement.textContent = text;
+             chatbox.appendChild(messageElement);
+             chatbox.scrollTop = chatbox.scrollHeight; // Tự cuộn xuống dưới
+        }
+
+        // Cho phép gửi bằng phím Enter
+        userInput.addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+    </script>
+</body>
+</html>
